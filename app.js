@@ -51,6 +51,22 @@ function changeHandler(items) {
         // render all the to-do items
         for (let i = 0; i < items.length; i++) {
 
+            // build the todo checkbox
+            const todoBox = document.createElement('input')
+            todoBox.type = 'checkbox'
+            todoBox.id = items[i].itemId
+            todoBox.checked = items[i].item.complete ? true : false
+            todoBox.onclick = (e) => {
+                e.preventDefault()
+                userbase.updateItem({
+                    databaseName: 'todos', itemId: items[i].itemId, item: {
+                        'todo': items[i].item.todo,
+                        'complete': !items[i].item.complete
+                    }
+                })
+                    .catch((e) => document.getElementById('add-todo-error').innerHTML = e)
+            }
+
             // build the todo label
             const todoLabel = document.createElement('label')
             todoLabel.innerHTML = items[i].item.todo
@@ -59,6 +75,7 @@ function changeHandler(items) {
             // append the todo item to the list
             const todoItem = document.createElement('div')
             todoItem.appendChild(todoLabel)
+            todoItem.appendChild(todoBox)
             todosList.appendChild(todoItem)
         }
     }
@@ -69,10 +86,10 @@ function addTodoHandler(e) {
 
     const todo = document.getElementById('add-todo').value
 
-    userbase.insertItem({ databaseName: 'todos', item: { 'todo': todo }})
-      .then(() => document.getElementById('add-todo').value = '')
-      .catch((e) => document.getElementById('add-todo-error').innerHTML = e)
-  }
+    userbase.insertItem({ databaseName: 'todos', item: { 'todo': todo } })
+        .then(() => document.getElementById('add-todo').value = '')
+        .catch((e) => document.getElementById('add-todo-error').innerHTML = e)
+}
 
 document.getElementById('login-form').addEventListener('submit', handleLogin)
 document.getElementById('signup-form').addEventListener('submit', handleSignUp)

@@ -1,5 +1,8 @@
 
 userbase.init({ appId: '54f1020c-a366-416f-b9ca-3f140b975383' })
+    .then((session) => session.user ? showTodos(session.user.username) : showAuth())
+    .catch(() => showAuth())
+    .finally(() => document.getElementById('loading-view').style.display = 'none')
 
 function handleLogin(e) {
     e.preventDefault()
@@ -7,7 +10,7 @@ function handleLogin(e) {
     const username = document.getElementById('login-username').value
     const password = document.getElementById('login-password').value
 
-    userbase.signIn({ username, password, rememberMe: 'none' })
+    userbase.signIn({ username, password, rememberMe: 'local' })
         .then((user) => showTodos(user.username))
         .catch((e) => document.getElementById('login-error').innerHTML = e)
 }
@@ -18,9 +21,26 @@ function handleSignUp(e) {
     const username = document.getElementById('signup-username').value
     const password = document.getElementById('signup-password').value
 
-    userbase.signUp({ username, password, rememberMe: 'none' })
+    userbase.signUp({ username, password, rememberMe: 'local' })
         .then((user) => showTodos(user.username))
         .catch((e) => document.getElementById('signup-error').innerHTML = e)
+}
+
+function handleLogout() {
+    userbase.signOut()
+        .then(() => showAuth())
+        .catch((e) => document.getElementById('logout-error').insertBefore = e)
+}
+
+function showAuth() {
+    document.getElementById('todo-view').style.display = 'none'
+    document.getElementById('auth-view').style.display = 'block'
+    document.getElementById('login-username').value = ''
+    document.getElementById('login-password').value = ''
+    document.getElementById('login-error').innerText = ''
+    document.getElementById('signup-username').value = ''
+    document.getElementById('signup-password').value = ''
+    document.getElementById('signup-error').innerText = ''
 }
 
 function showTodos(username) {
@@ -51,6 +71,15 @@ function changeHandler(items) {
         // render all the to-do items
         for (let i = 0; i < items.length; i++) {
 
+            // build the todo delete button
+            const todoDelete = document.createElement('button')
+            todoDelete.innerHTML = 'X'
+            todoDelete.style.display = 'inline-block'
+            todoDelete.onclick = () => {
+                userbase.deleteItem({ databaseName: 'todos', itemId: items[i].itemId })
+                    .catch((e) => document.getElementById('add-todo-error').innerHTML = e)
+            }
+
             // build the todo checkbox
             const todoBox = document.createElement('input')
             todoBox.type = 'checkbox'
@@ -74,6 +103,7 @@ function changeHandler(items) {
 
             // append the todo item to the list
             const todoItem = document.createElement('div')
+            todoItem.appendChild(todoDelete)
             todoItem.appendChild(todoLabel)
             todoItem.appendChild(todoBox)
             todosList.appendChild(todoItem)
@@ -94,5 +124,7 @@ function addTodoHandler(e) {
 document.getElementById('login-form').addEventListener('submit', handleLogin)
 document.getElementById('signup-form').addEventListener('submit', handleSignUp)
 document.getElementById('add-todo-form').addEventListener('submit', addTodoHandler)
+document.getElementById('logout-button').addEventListener('click', handleLogout)
 
 document.getElementById('todo-view').style.display = 'none'
+document.getElementById('auth-view').style.display = 'none'
